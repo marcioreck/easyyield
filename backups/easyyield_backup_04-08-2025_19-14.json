@@ -1,5 +1,5 @@
 {
-  "date": "2025-08-04T20:53:33.102Z",
+  "date": "2025-08-04T22:14:59.455Z",
   "assets": [
     {
       "id": "cmdxl26eo000094vqvri2n80m",
@@ -40,6 +40,31 @@
       "vencimento": null
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "id": "cmdxmduyc0001942a9sgatr14",
+      "createdAt": "2025-08-04T21:26:02.484Z",
+      "updatedAt": "2025-08-04T21:26:02.484Z",
+      "date": "2019-04-09T03:00:00.000Z",
+      "type": "COMPRA",
+      "quantity": 2,
+      "price": 4589.86,
+      "fees": null,
+      "notes": "RENTABILIDADE CONTRATADA IPCA + 3,71%",
+      "assetId": "cmdxl26eo000094vqvri2n80m"
+    },
+    {
+      "id": "cmdxnzrxz000194ghtkgo70fo",
+      "createdAt": "2025-08-04T22:11:04.632Z",
+      "updatedAt": "2025-08-04T22:11:04.632Z",
+      "date": "2019-10-30T15:00:00.000Z",
+      "type": "COMPRA",
+      "quantity": 1,
+      "price": 4956.01,
+      "fees": null,
+      "notes": "RENTABILIDADE CONTRATADA IPCA + 3.28%",
+      "assetId": "cmdxl65il000294vqdzkv4f68"
+    }
+  ],
   "prices": []
 }

@@ -1,33 +1,114 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { parseDate } from '@/utils/format'
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
   try {
-    // Verifica se a transação existe
     const transaction = await prisma.transaction.findUnique({
-      where: { id: params.id },
-      include: { asset: true }
+      where: { id: resolvedParams.id },
+      include: {
+        asset: {
+          select: {
+            ticker: true,
+            name: true,
+            currency: true
+          }
+        }
+      }
     })
 
     if (!transaction) {
       return NextResponse.json(
-        { error: 'Transação não encontrada' },
+        { error: 'Operação não encontrada' },
         { status: 404 }
       )
     }
 
-    // Se for uma venda, não precisa verificar nada
-    // Se for uma compra, precisa verificar se tem vendas posteriores que dependem dela
+    return NextResponse.json(transaction)
+  } catch (error) {
+    console.error('Error fetching transaction:', error)
+    return NextResponse.json(
+      { error: 'Erro ao buscar operação' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const resolvedParams = await params
+  try {
+    const data = await request.json()
+
+    // Converte a data do formato DD/MM/YYYY para Date
+    const date = parseDate(data.date)
+
+    const transaction = await prisma.transaction.update({
+      where: { id: resolvedParams.id },
+      data: {
+        date,
+        type: data.type,
+        quantity: data.quantity,
+        price: data.price,
+        fees: data.fees || null,
+        notes: data.notes || null,
+        assetId: data.assetId
+      },
+      include: {
+        asset: {
+          select: {
+            ticker: true,
+            name: true,
+            currency: true
+          }
+        }
+      }
+    })
+
+    return NextResponse.json(transaction)
+  } catch (error) {
+    console.error('Error updating transaction:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erro ao atualizar operação' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const resolvedParams = await params
+  try {
+    // Primeiro, verifica se é uma compra e se tem vendas dependentes
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: resolvedParams.id },
+      include: {
+        asset: true
+      }
+    })
+
+    if (!transaction) {
+      return NextResponse.json(
+        { error: 'Operação não encontrada' },
+        { status: 404 }
+      )
+    }
+
     if (transaction.type === 'COMPRA') {
-      // Busca todas as transações posteriores do mesmo ativo
-      const laterTransactions = await prisma.transaction.findMany({
+      // Calcula a quantidade disponível após esta compra
+      const allTransactions = await prisma.transaction.findMany({
         where: {
           assetId: transaction.assetId,
           date: {
-            gt: transaction.date
+            gte: transaction.date
           }
         },
         orderBy: {
@@ -35,38 +116,29 @@ export async function DELETE(
         }
       })
 
-      // Calcula o saldo disponível após cada transação
-      let balance = -transaction.quantity // Remove a quantidade da transação que será deletada
-      for (const t of laterTransactions) {
-        if (t.type === 'COMPRA') {
-          balance += t.quantity
-        } else {
-          balance -= t.quantity
-          if (balance < 0) {
-            return NextResponse.json(
-              {
-                error: 'Não é possível excluir esta compra pois existem vendas posteriores que dependem dela'
-              },
-              { status: 400 }
-            )
-          }
+      let balance = 0
+      for (const tx of allTransactions) {
+        if (tx.id === resolvedParams.id) continue // Ignora a transação que será excluída
+        balance += tx.type === 'COMPRA' ? tx.quantity : -tx.quantity
+        if (balance < 0) {
+          return NextResponse.json(
+            { error: 'Não é possível excluir esta compra pois existem vendas que dependem dela' },
+            { status: 400 }
+          )
         }
       }
     }
 
-    // Deleta a transação
+    // Se chegou aqui, pode excluir
     await prisma.transaction.delete({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
 
-    return NextResponse.json({
-      success: true,
-      message: 'Transação excluída com sucesso'
-    })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting transaction:', error)
     return NextResponse.json(
-      { error: 'Erro ao excluir transação' },
+      { error: 'Erro ao excluir operação' },
       { status: 500 }
     )
   }

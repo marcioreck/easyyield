@@ -81,9 +81,18 @@ export function formatQuantity(value: number): string {
   }).format(value)
 }
 
-export function parseQuantity(value: string): number {
+export function formatNumber(value: number, decimals: number = 2): string {
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  }).format(value)
+}
+
+// Funções específicas para CSV (usando ponto como decimal)
+export function parseCsvQuantity(value: string): number {
   // No CSV, o ponto é o separador decimal
-  const number = parseFloat(value.trim())
+  const cleanValue = value.trim()
+  const number = parseFloat(cleanValue)
   
   if (isNaN(number)) {
     throw new Error('Quantidade inválida')
@@ -92,30 +101,13 @@ export function parseQuantity(value: string): number {
   return number
 }
 
-export function parseCurrency(value: string): number {
+export function parseCsvCurrency(value: string): number {
   // No CSV, o ponto é o separador decimal
-  const number = parseFloat(value.trim())
+  const cleanValue = value.trim()
+  const number = parseFloat(cleanValue)
   
   if (isNaN(number)) {
     throw new Error('Valor monetário inválido')
-  }
-  
-  return number
-}
-
-export function formatNumber(value: number, decimals: number = 2): string {
-  return new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
-  }).format(value)
-}
-
-export function parseNumber(value: string): number {
-  // No CSV, o ponto é o separador decimal
-  const number = parseFloat(value.trim())
-  
-  if (isNaN(number)) {
-    throw new Error('Número inválido')
   }
   
   return number

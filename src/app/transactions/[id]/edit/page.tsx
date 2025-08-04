@@ -1,14 +1,40 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Asset, Transaction } from '@prisma/client'
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import { Asset } from '@prisma/client'
+import { formatDate, parseUserCurrency, parseUserQuantity } from '@/utils/format'
 
-export default function EditTransactionPage({ params }: { params: { id: string } }) {
+interface Transaction {
+  id: string
+  date: string
+  type: 'COMPRA' | 'VENDA'
+  quantity: number
+  price: number
+  fees?: number | null
+  notes?: string | null
+  assetId: string
+  asset: {
+    ticker: string
+    name: string
+    currency: 'BRL' | 'USD'
+  }
+}
+
+export default function EditTransactionPage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const router = useRouter()
+  const resolvedParams = use(params)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [assets, setAssets] = useState<Asset[]>([])
   const [formData, setFormData] = useState({
-    assetId: '',
+    date: '',
     type: 'COMPRA',
-    date: new Date().toISOString().split('T')[0],
+    assetId: '',
     quantity: '',
     price: '',
     fees: '',
@@ -16,83 +42,145 @@ export default function EditTransactionPage({ params }: { params: { id: string }
   })
 
   useEffect(() => {
-    fetchAssets()
-    fetchTransaction()
-  }, [])
+    const fetchData = async () => {
+      try {
+        // Busca a lista de ativos
+        const assetsResponse = await fetch('/api/assets')
+        if (!assetsResponse.ok) throw new Error('Erro ao carregar ativos')
+        const assetsData = await assetsResponse.json()
+        setAssets(assetsData)
 
-  const fetchAssets = async () => {
-    try {
-      const response = await fetch('/api/assets')
-      if (response.ok) {
-        const data = await response.json()
-        setAssets(data)
-      }
-    } catch (error) {
-      console.error('Erro ao buscar ativos:', error)
-    }
-  }
+        // Busca os dados da transação
+        const transactionResponse = await fetch(`/api/transactions/${resolvedParams.id}`)
+        if (!transactionResponse.ok) throw new Error('Erro ao carregar operação')
+        const transaction: Transaction = await transactionResponse.json()
 
-  const fetchTransaction = async () => {
-    try {
-      const response = await fetch(`/api/transactions/${params.id}`)
-      if (response.ok) {
-        const data = await response.json()
+        // Formata os dados para o formulário
         setFormData({
-          assetId: data.assetId,
-          type: data.type,
-          date: new Date(data.date).toISOString().split('T')[0],
-          quantity: data.quantity.toString(),
-          price: data.price.toString(),
-          fees: data.fees?.toString() || '',
-          notes: data.notes || ''
+          date: formatDate(new Date(transaction.date)),
+          type: transaction.type,
+          assetId: transaction.assetId,
+          quantity: transaction.quantity.toString().replace('.', ','),
+          price: transaction.price.toString().replace('.', ','),
+          fees: transaction.fees?.toString().replace('.', ',') || '',
+          notes: transaction.notes || ''
         })
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setError(error instanceof Error ? error.message : 'Erro ao carregar dados')
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Erro ao buscar operação:', error)
-      alert('Erro ao buscar operação')
     }
-  }
+
+    fetchData()
+  }, [resolvedParams.id])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+
     try {
-      const response = await fetch(`/api/transactions/${params.id}`, {
+      // Valida e converte os dados
+      const data = {
+        date: formData.date, // Mantém a data no formato DD/MM/YYYY para a API converter
+        type: formData.type as 'COMPRA' | 'VENDA',
+        assetId: formData.assetId,
+        quantity: parseUserQuantity(formData.quantity),
+        price: parseUserCurrency(formData.price),
+        fees: formData.fees ? parseUserCurrency(formData.fees) : null,
+        notes: formData.notes || null
+      }
+
+      const response = await fetch(`/api/transactions/${resolvedParams.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...formData,
-          quantity: Number(formData.quantity),
-          price: Number(formData.price),
-          fees: formData.fees ? Number(formData.fees) : null
-        }),
+        body: JSON.stringify(data)
       })
 
-      if (response.ok) {
-        window.location.href = '/transactions'
-      } else {
-        alert('Erro ao atualizar operação')
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao atualizar operação')
       }
+
+      router.push('/transactions')
     } catch (error) {
-      console.error('Erro:', error)
-      alert('Erro ao atualizar operação')
+      console.error('Error updating transaction:', error)
+      setError(error instanceof Error ? error.message : 'Erro ao atualizar operação')
     }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  if (loading) {
+    return <div>Carregando...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        {error}
+      </div>
+    )
   }
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Editar Operação</h1>
-      
+      <h1 className="text-2xl font-bold mb-6">Editar Operação</h1>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block mb-1">Ativo</label>
+          <label htmlFor="date" className="block mb-1">
+            Data
+          </label>
+          <input
+            type="text"
+            id="date"
+            name="date"
+            value={formData.date}
+            onChange={handleInputChange}
+            placeholder="DD/MM/YYYY"
+            className="w-full border p-2 rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="type" className="block mb-1">
+            Tipo
+          </label>
           <select
-            value={formData.assetId}
-            onChange={(e) => setFormData({...formData, assetId: e.target.value})}
-            className="w-full border p-2"
+            id="type"
+            name="type"
+            value={formData.type}
+            onChange={handleInputChange}
+            className="w-full border p-2 rounded"
             required
           >
+            <option value="COMPRA">Compra</option>
+            <option value="VENDA">Venda</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="assetId" className="block mb-1">
+            Ativo
+          </label>
+          <select
+            id="assetId"
+            name="assetId"
+            value={formData.assetId}
+            onChange={handleInputChange}
+            className="w-full border p-2 rounded"
+            required
+          >
+            <option value="">Selecione um ativo</option>
             {assets.map(asset => (
               <option key={asset.id} value={asset.id}>
                 {asset.ticker} - {asset.name}
@@ -102,87 +190,86 @@ export default function EditTransactionPage({ params }: { params: { id: string }
         </div>
 
         <div>
-          <label className="block mb-1">Tipo</label>
-          <select
-            value={formData.type}
-            onChange={(e) => setFormData({...formData, type: e.target.value})}
-            className="w-full border p-2"
-            required
-          >
-            <option value="COMPRA">Compra</option>
-            <option value="VENDA">Venda</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block mb-1">Data</label>
+          <label htmlFor="quantity" className="block mb-1">
+            Quantidade
+          </label>
           <input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({...formData, date: e.target.value})}
-            className="w-full border p-2"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1">Quantidade</label>
-          <input
-            type="number"
-            step="0.000001"
+            type="text"
+            id="quantity"
+            name="quantity"
             value={formData.quantity}
-            onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-            className="w-full border p-2"
+            onChange={handleInputChange}
+            placeholder="0,00"
+            className="w-full border p-2 rounded"
             required
           />
         </div>
 
         <div>
-          <label className="block mb-1">Preço Unitário</label>
+          <label htmlFor="price" className="block mb-1">
+            Preço Unitário
+          </label>
           <input
-            type="number"
-            step="0.01"
+            type="text"
+            id="price"
+            name="price"
             value={formData.price}
-            onChange={(e) => setFormData({...formData, price: e.target.value})}
-            className="w-full border p-2"
+            onChange={handleInputChange}
+            placeholder="0,00"
+            className="w-full border p-2 rounded"
             required
           />
         </div>
 
         <div>
-          <label className="block mb-1">Taxas/Custos (opcional)</label>
+          <label htmlFor="fees" className="block mb-1">
+            Taxas
+          </label>
           <input
-            type="number"
-            step="0.01"
+            type="text"
+            id="fees"
+            name="fees"
             value={formData.fees}
-            onChange={(e) => setFormData({...formData, fees: e.target.value})}
-            className="w-full border p-2"
+            onChange={handleInputChange}
+            placeholder="0,00"
+            className="w-full border p-2 rounded"
           />
         </div>
 
         <div>
-          <label className="block mb-1">Observações (opcional)</label>
+          <label htmlFor="notes" className="block mb-1">
+            Observações
+          </label>
           <textarea
+            id="notes"
+            name="notes"
             value={formData.notes}
-            onChange={(e) => setFormData({...formData, notes: e.target.value})}
-            className="w-full border p-2"
+            onChange={handleInputChange}
+            className="w-full border p-2 rounded"
             rows={3}
           />
         </div>
 
-        <div className="flex gap-2">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+
+        <div className="flex justify-between">
+          <button
+            type="button"
+            onClick={() => router.push('/transactions')}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Cancelar
+          </button>
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Salvar
           </button>
-          <a
-            href="/transactions"
-            className="bg-gray-500 text-white px-4 py-2 rounded"
-          >
-            Cancelar
-          </a>
         </div>
       </form>
     </div>
