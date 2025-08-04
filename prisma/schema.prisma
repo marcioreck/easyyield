@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AssetType {
+  TESOURO_DIRETO
+  POUPANCA
+  CDB
+  FII
+  REIT
+  ACAO_BR
+  ACAO_US
+  DEBENTURE
+  RENDA_FIXA_DIGITAL
+  STAKING_CRYPTO
+  CRI
+  FI_INFRA
+  OUTROS
+}
+
+enum Currency {
+  BRL
+  USD
+}
+
+model Asset {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  type        AssetType
+  ticker      String
+  name        String
+  currency    Currency
+  description String?
+  sector      String?
+  
+  // Campos específicos para análise fundamentalista
+  dividendYield     Float?
+  priceToEarnings   Float?
+  priceToBook       Float?
+  netMargin         Float?
+  roic              Float?
+  
+  // Campos específicos para renda fixa
+  indexador         String?  // IPCA, CDI, etc.
+  taxa             Float?   // Taxa do papel (% a.a.)
+  vencimento       DateTime? // Data de vencimento
+  
+  // Relacionamentos
+  transactions Transaction[]
+  prices       Price[]
+  
+  @@unique([ticker, currency])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  date      DateTime
+  type      String   // COMPRA ou VENDA
+  quantity  Float
+  price     Float
+  fees      Float?
+  notes     String?
+  
+  // Relacionamento com Asset
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id])
+}
+
+model Price {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  date      DateTime
+  price     Float
+  volume    Float?
+  
+  // Relacionamento com Asset
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id])
+  
+  @@unique([assetId, date])
+}

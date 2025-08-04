@@ -1,0 +1,45 @@
+{
+  "date": "2025-08-04T20:53:33.102Z",
+  "assets": [
+    {
+      "id": "cmdxl26eo000094vqvri2n80m",
+      "createdAt": "2025-08-04T20:48:57.824Z",
+      "updatedAt": "2025-08-04T20:52:13.543Z",
+      "type": "TESOURO_DIRETO",
+      "ticker": "T2050A",
+      "name": "IPCA+ 2050 Aplicado em 04/09/2019",
+      "currency": "BRL",
+      "description": "2 títulos de 4.589,86",
+      "sector": null,
+      "dividendYield": null,
+      "priceToEarnings": null,
+      "priceToBook": null,
+      "netMargin": null,
+      "roic": null,
+      "indexador": null,
+      "taxa": null,
+      "vencimento": null
+    },
+    {
+      "id": "cmdxl65il000294vqdzkv4f68",
+      "createdAt": "2025-08-04T20:52:03.309Z",
+      "updatedAt": "2025-08-04T20:52:55.485Z",
+      "type": "TESOURO_DIRETO",
+      "ticker": "T2050B",
+      "name": "IPCA+ 2050 Aplicado em 30/10/2019",
+      "currency": "BRL",
+      "description": "1 título de 4.956,01",
+      "sector": null,
+      "dividendYield": null,
+      "priceToEarnings": null,
+      "priceToBook": null,
+      "netMargin": null,
+      "roic": null,
+      "indexador": null,
+      "taxa": null,
+      "vencimento": null
+    }
+  ],
+  "transactions": [],
+  "prices": []
+}
