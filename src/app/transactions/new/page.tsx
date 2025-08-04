@@ -2,107 +2,122 @@
 
 import { useState, useEffect } from 'react'
 import { Asset } from '@prisma/client'
-import { validateTransaction, ValidationError } from '@/utils/validations'
-import { formatCurrency, parseCurrency, parseQuantity } from '@/utils/format'
+import { formatCurrency, formatDate, formatQuantity, parseQuantity, parseCurrency, parseDate } from '@/utils/format'
+
+interface FormData {
+  assetId: string
+  type: 'COMPRA' | 'VENDA'
+  date: string
+  quantity: string
+  price: string
+  fees?: string
+  notes?: string
+}
 
 export default function NewTransactionPage() {
   const [assets, setAssets] = useState<Asset[]>([])
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState<FormData>({
     assetId: '',
     type: 'COMPRA',
-    date: new Date().toISOString().split('T')[0],
+    date: formatDate(new Date()),
     quantity: '',
     price: '',
     fees: '',
     notes: ''
   })
-  const [errors, setErrors] = useState<ValidationError[]>([])
-  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    const fetchAssets = async () => {
+      try {
+        const response = await fetch('/api/assets')
+        if (response.ok) {
+          const data = await response.json()
+          setAssets(data)
+          if (data.length > 0) {
+            setFormData(prev => ({ ...prev, assetId: data[0].id }))
+          }
+        } else {
+          throw new Error('Erro ao carregar ativos')
+        }
+      } catch (error) {
+        console.error('Error fetching assets:', error)
+        setError('Erro ao carregar lista de ativos')
+      }
+    }
+
     fetchAssets()
   }, [])
 
-  const fetchAssets = async () => {
-    try {
-      const response = await fetch('/api/assets')
-      if (response.ok) {
-        const data = await response.json()
-        setAssets(data)
-        if (data.length > 0) {
-          setFormData(prev => ({ ...prev, assetId: data[0].id }))
-          setSelectedAsset(data[0])
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao buscar ativos:', error)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErrors([])
-    
-    const numericData = {
-      ...formData,
-      quantity: parseQuantity(formData.quantity),
-      price: parseCurrency(formData.price),
-      fees: formData.fees ? parseCurrency(formData.fees) : null
-    }
+    setError(null)
 
-    // Validar dados
-    const validationErrors = await validateTransaction(numericData, selectedAsset)
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors)
-      return
-    }
-
-    setSubmitting(true)
     try {
+      setLoading(true)
+
+      // Valida e converte os valores
+      const data = {
+        assetId: formData.assetId,
+        type: formData.type,
+        date: parseDate(formData.date),
+        quantity: parseQuantity(formData.quantity),
+        price: parseCurrency(formData.price),
+        fees: formData.fees ? parseCurrency(formData.fees) : undefined,
+        notes: formData.notes
+      }
+
+      // Se for venda, verifica quantidade disponível
+      if (data.type === 'VENDA') {
+        const response = await fetch(`/api/assets/${data.assetId}/available-quantity`)
+        if (response.ok) {
+          const { quantity: availableQuantity } = await response.json()
+          if (data.quantity > availableQuantity) {
+            throw new Error(`Quantidade insuficiente. Disponível: ${formatQuantity(availableQuantity)}`)
+          }
+        } else {
+          throw new Error('Erro ao verificar quantidade disponível')
+        }
+      }
+
+      // Envia a transação
       const response = await fetch('/api/transactions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(numericData),
+        body: JSON.stringify(data)
       })
 
-      if (response.ok) {
-        window.location.href = '/transactions'
-      } else {
-        const data = await response.json()
-        setErrors([{ field: 'submit', message: data.error || 'Erro ao salvar operação' }])
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao criar transação')
       }
+
+      // Redireciona para a lista de transações
+      window.location.href = '/transactions'
     } catch (error) {
-      console.error('Erro:', error)
-      setErrors([{ field: 'submit', message: 'Erro ao salvar operação' }])
+      console.error('Error creating transaction:', error)
+      setError(error instanceof Error ? error.message : 'Erro ao criar transação')
     } finally {
-      setSubmitting(false)
+      setLoading(false)
     }
   }
 
-  const getFieldError = (field: string) => {
-    return errors.find(error => error.field === field)?.message
-  }
-
-  const handleAssetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const asset = assets.find(a => a.id === e.target.value)
-    setSelectedAsset(asset || null)
-    setFormData(prev => ({ ...prev, assetId: e.target.value }))
-  }
+  const selectedAsset = assets.find(a => a.id === formData.assetId)
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Nova Operação</h1>
-      
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Nova Operação</h1>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block mb-1">Ativo</label>
           <select
             value={formData.assetId}
-            onChange={handleAssetChange}
-            className={`w-full border p-2 ${getFieldError('assetId') ? 'border-red-500' : ''}`}
+            onChange={(e) => setFormData({ ...formData, assetId: e.target.value })}
+            className="w-full border p-2 rounded"
             required
           >
             {assets.map(asset => (
@@ -111,25 +126,19 @@ export default function NewTransactionPage() {
               </option>
             ))}
           </select>
-          {getFieldError('assetId') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('assetId')}</p>
-          )}
         </div>
 
         <div>
           <label className="block mb-1">Tipo</label>
           <select
             value={formData.type}
-            onChange={(e) => setFormData({...formData, type: e.target.value})}
-            className={`w-full border p-2 ${getFieldError('type') ? 'border-red-500' : ''}`}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value as 'COMPRA' | 'VENDA' })}
+            className="w-full border p-2 rounded"
             required
           >
             <option value="COMPRA">Compra</option>
             <option value="VENDA">Venda</option>
           </select>
-          {getFieldError('type') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('type')}</p>
-          )}
         </div>
 
         <div>
@@ -137,14 +146,11 @@ export default function NewTransactionPage() {
           <input
             type="date"
             value={formData.date}
-            onChange={(e) => setFormData({...formData, date: e.target.value})}
-            className={`w-full border p-2 ${getFieldError('date') ? 'border-red-500' : ''}`}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            max={formatDate(new Date(), 'yyyy-MM-dd')}
+            className="w-full border p-2 rounded"
             required
-            max={new Date().toISOString().split('T')[0]}
           />
-          {getFieldError('date') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('date')}</p>
-          )}
         </div>
 
         <div>
@@ -152,81 +158,69 @@ export default function NewTransactionPage() {
           <input
             type="text"
             value={formData.quantity}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '.')
-              setFormData({...formData, quantity: value})
-            }}
-            className={`w-full border p-2 ${getFieldError('quantity') ? 'border-red-500' : ''}`}
-            required
+            onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
             placeholder="0,00"
+            className="w-full border p-2 rounded"
+            required
           />
-          {getFieldError('quantity') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('quantity')}</p>
-          )}
         </div>
 
         <div>
-          <label className="block mb-1">Preço Unitário ({selectedAsset?.currency})</label>
+          <label className="block mb-1">
+            Preço ({selectedAsset?.currency === 'USD' ? 'USD' : 'R$'})
+          </label>
           <input
             type="text"
             value={formData.price}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '.')
-              setFormData({...formData, price: value})
-            }}
-            className={`w-full border p-2 ${getFieldError('price') ? 'border-red-500' : ''}`}
-            required
+            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
             placeholder="0,00"
+            className="w-full border p-2 rounded"
+            required
           />
-          {getFieldError('price') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('price')}</p>
-          )}
         </div>
 
         <div>
-          <label className="block mb-1">Taxas/Custos ({selectedAsset?.currency}) (opcional)</label>
+          <label className="block mb-1">
+            Taxas ({selectedAsset?.currency === 'USD' ? 'USD' : 'R$'}) - Opcional
+          </label>
           <input
             type="text"
             value={formData.fees}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^\d,]/g, '').replace(/,/g, '.')
-              setFormData({...formData, fees: value})
-            }}
-            className={`w-full border p-2 ${getFieldError('fees') ? 'border-red-500' : ''}`}
+            onChange={(e) => setFormData({ ...formData, fees: e.target.value })}
             placeholder="0,00"
+            className="w-full border p-2 rounded"
           />
-          {getFieldError('fees') && (
-            <p className="text-red-500 text-sm mt-1">{getFieldError('fees')}</p>
-          )}
         </div>
 
         <div>
-          <label className="block mb-1">Observações (opcional)</label>
+          <label className="block mb-1">Observações</label>
           <textarea
             value={formData.notes}
-            onChange={(e) => setFormData({...formData, notes: e.target.value})}
-            className="w-full border p-2"
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            className="w-full border p-2 rounded"
             rows={3}
           />
         </div>
 
-        {getFieldError('submit') && (
+        {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {getFieldError('submit')}
+            {error}
           </div>
         )}
 
         <div className="flex gap-2">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-blue-300"
-            disabled={submitting}
+            disabled={loading}
+            className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            {submitting ? 'Salvando...' : 'Salvar'}
+            {loading ? 'Salvando...' : 'Salvar'}
           </button>
           <a
             href="/transactions"
-            className="bg-gray-500 text-white px-4 py-2 rounded"
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
           >
             Cancelar
           </a>

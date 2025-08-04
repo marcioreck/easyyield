@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { parseDate } from '@/utils/format'
 
 interface ImportTransaction {
   date: string
@@ -14,78 +15,106 @@ interface ImportTransaction {
 export async function POST(request: Request) {
   try {
     const { transactions } = await request.json() as { transactions: ImportTransaction[] }
+    const results = []
+    const errors = []
 
-    // Valida todas as transações antes de importar
-    for (const transaction of transactions) {
-      const asset = await prisma.asset.findFirst({
-        where: { ticker: transaction.ticker }
-      })
+    // Processa cada transação
+    for (let i = 0; i < transactions.length; i++) {
+      try {
+        const transaction = transactions[i]
+        console.log('Processing transaction:', transaction) // Debug log
 
-      if (!asset) {
-        return NextResponse.json(
-          { error: `Ativo não encontrado: ${transaction.ticker}` },
-          { status: 400 }
-        )
-      }
-
-      // Se for venda, verifica se tem quantidade suficiente
-      if (transaction.type === 'VENDA') {
-        const previousTransactions = await prisma.transaction.findMany({
-          where: {
-            assetId: asset.id,
-            date: {
-              lt: new Date(transaction.date)
-            }
-          }
-        })
-
-        let quantity = 0
-        for (const prev of previousTransactions) {
-          if (prev.type === 'COMPRA') {
-            quantity += prev.quantity
-          } else {
-            quantity -= prev.quantity
-          }
-        }
-
-        if (transaction.quantity > quantity) {
-          return NextResponse.json(
-            { error: `Quantidade insuficiente para venda de ${transaction.ticker}` },
-            { status: 400 }
-          )
-        }
-      }
-    }
-
-    // Importa as transações
-    const imported = await Promise.all(
-      transactions.map(async transaction => {
+        // Busca o ativo pelo ticker
         const asset = await prisma.asset.findFirst({
           where: { ticker: transaction.ticker }
         })
 
-        return prisma.transaction.create({
+        if (!asset) {
+          throw new Error(`Ativo não encontrado: ${transaction.ticker}`)
+        }
+
+        // Converte a data
+        let transactionDate: Date
+        try {
+          transactionDate = parseDate(transaction.date)
+        } catch (error) {
+          throw new Error(`Data inválida: ${transaction.date}. Use o formato DD/MM/YYYY`)
+        }
+
+        // Se for venda, verifica quantidade disponível
+        if (transaction.type === 'VENDA') {
+          const previousTransactions = await prisma.transaction.findMany({
+            where: {
+              assetId: asset.id,
+              date: {
+                lt: transactionDate
+              }
+            }
+          })
+
+          let availableQuantity = 0
+          for (const prev of previousTransactions) {
+            if (prev.type === 'COMPRA') {
+              availableQuantity += prev.quantity
+            } else {
+              availableQuantity -= prev.quantity
+            }
+          }
+
+          if (transaction.quantity > availableQuantity) {
+            throw new Error(`Quantidade insuficiente para venda de ${transaction.ticker}. Disponível: ${availableQuantity}`)
+          }
+        }
+
+        // Cria a transação
+        const result = await prisma.transaction.create({
           data: {
-            assetId: asset!.id,
+            assetId: asset.id,
             type: transaction.type,
-            date: new Date(transaction.date),
+            date: transactionDate,
             quantity: transaction.quantity,
             price: transaction.price,
             fees: transaction.fees,
             notes: transaction.notes
           }
         })
-      })
-    )
 
+        results.push(result)
+      } catch (error) {
+        console.error('Error processing transaction:', error) // Debug log
+        errors.push({
+          line: i + 1,
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        })
+      }
+    }
+
+    // Se houver erros, retorna erro com detalhes
+    if (errors.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Erro ao importar algumas transações',
+          details: errors
+        },
+        { status: 400 }
+      )
+    }
+
+    // Retorna sucesso com as transações criadas
     return NextResponse.json({
       success: true,
-      count: imported.length
+      count: results.length,
+      transactions: results
     })
   } catch (error) {
-    console.error('Error importing transactions:', error)
+    console.error('Error importing transactions:', error) // Debug log
     return NextResponse.json(
-      { error: 'Failed to import transactions' },
+      {
+        success: false,
+        error: 'Erro ao processar arquivo de importação',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
+      },
       { status: 500 }
     )
   }

@@ -117,6 +117,14 @@ npm start
 - [ ] Comparação com benchmarks (IBOV, S&P500)
 - [ ] Exportação de relatórios em PDF
 - [ ] Otimização de consultas e performance
+- [ ] Testar com Tesouro Direto
+- [ ] Testar com FI-Infra (Classificar as operações como REAL ou SIMULADA e incluir isso nos filtros para facilitar as análises e planejamentos)
+- [ ] Testar com CRI
+- [ ] Testar com Renda Fixa Digital
+- [ ] Testar com Fundos
+- [ ] Testar com Ações
+- [ ] Testar com Staking Crypto
+- [ ] Testar com Outros tipos de investimento
 
 ## Estrutura do Projeto
 
