@@ -113,10 +113,6 @@ npm start
 - [x] Validações de formulários
 - [x] Formatação BR (moeda, datas)
 - [x] Suporte a CRI e FI-Infra
-- [ ] Gráficos de rentabilidade por tipo de ativo
-- [ ] Comparação com benchmarks (IBOV, S&P500)
-- [ ] Exportação de relatórios em PDF
-- [ ] Otimização de consultas e performance
 - [ ] Testar com Tesouro Direto (Ajustar como se deve calcular o DY de títulos com  rendimento atrelado à indicadores, como o caso desses Tesouro IPCA+)
 - [ ] Testar com FI-Infra (Classificar as operações como REAL ou SIMULADA e incluir isso nos filtros para facilitar as análises e planejamentos)
 - [ ] Testar com CRI
@@ -125,6 +121,10 @@ npm start
 - [ ] Testar com Ações
 - [ ] Testar com Staking Crypto
 - [ ] Testar com Outros tipos de investimento
+- [ ] Gráficos de rentabilidade por tipo de ativo
+- [ ] Comparação com benchmarks (IBOV, S&P500)
+- [ ] Exportação de relatórios em PDF
+- [ ] Otimização de consultas e performance
 
 ## Estrutura do Projeto
 
