@@ -83,6 +83,7 @@ model Price {
   date      DateTime
   price     Float
   volume    Float?
+  dividendYield Float?
   
   // Relacionamento com Asset
   assetId   String

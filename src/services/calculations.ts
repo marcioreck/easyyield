@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Asset, Transaction } from '@prisma/client'
 import { getLatestPrice } from './priceHistory'
+import { calculateTreasuryIPCADividendYield, isTreasuryIPCA } from './treasuryCalculations'
 
 export interface AssetPosition {
   asset: Asset
@@ -48,6 +49,21 @@ export async function calculateAssetPosition(assetId: string): Promise<AssetPosi
 
     const averagePrice = totalQuantityBought > 0 ? totalCostBought / totalQuantityBought : 0
     const latestPrice = await getLatestPrice(assetId)
+    
+    // Calcula dividend yield específico para cada tipo de ativo
+    let dividendYield = latestPrice?.dividendYield || null
+    
+    // Para Tesouro IPCA+, calcula DY específico
+    if (latestPrice && isTreasuryIPCA(asset)) {
+      const treasuryDY = calculateTreasuryIPCADividendYield(
+        asset,
+        latestPrice.price,
+        latestPrice.date
+      )
+      if (treasuryDY !== null) {
+        dividendYield = treasuryDY
+      }
+    }
 
     return {
       asset,
@@ -60,7 +76,7 @@ export async function calculateAssetPosition(assetId: string): Promise<AssetPosi
       percentReturn: latestPrice && totalInvested > 0 
         ? (((quantity * latestPrice.price) - totalInvested) / totalInvested) * 100 
         : null,
-      lastDividendYield: latestPrice?.dividendYield || null
+      lastDividendYield: dividendYield
     }
   } catch (error) {
     console.error('Error calculating asset position:', error)

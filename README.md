@@ -138,6 +138,10 @@ easyyield/
 │   ├── components/      # Componentes React
 │   ├── config/         # Configurações
 │   ├── services/       # Serviços e lógica de negócio
+│   │   ├── calculations.ts      # Cálculos gerais de posição e DY
+│   │   ├── treasuryCalculations.ts  # Cálculos específicos para Tesouro IPCA+
+│   │   ├── marketData.ts        # APIs de cotações
+│   │   └── ...
 │   └── utils/          # Utilitários
 ├── .env.example        # Exemplo de variáveis de ambiente
 ├── next.config.mjs     # Configuração Next.js
@@ -155,6 +159,32 @@ easyyield/
 - Cotações históricas
 - Dados fundamentalistas básicos
 - Sem necessidade de API key
+
+## Cálculos Específicos
+
+### Tesouro IPCA+
+Para títulos do Tesouro Direto atrelados ao IPCA, o sistema implementa cálculos específicos:
+
+#### Dividend Yield (DY)
+- **Fórmula**: Taxa Real + IPCA estimado
+- **Exemplo**: Título com taxa real 5,83% + IPCA 4,5% = DY ~10,33% a.a.
+- **Rendimento mensal**: DY/12 (~0,86% ao mês no exemplo)
+
+#### Retorno Acumulado
+- **Retorno Real**: Baseado na taxa fixa do papel
+- **Retorno Inflacionário**: Baseado no IPCA acumulado do período
+- **Retorno Total**: (1 + retorno real) × (1 + inflação) - 1
+
+#### Características Implementadas
+- Cálculo automático do DY baseado no tipo de indexador
+- Análise de sensibilidade para diferentes cenários de IPCA
+- Preço teórico baseado na curva de juros
+- Histórico de rentabilidade real vs. nominal
+
+#### API de Teste
+- **Endpoint**: `/api/test-treasury`
+- **GET**: Lista todos os títulos IPCA+ e seus cálculos
+- **POST**: Cria título de teste com dados reais
 
 ## Backup e Exportação
 

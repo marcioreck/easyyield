@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test-treasury": "tsx src/test-treasury.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
@@ -37,6 +38,7 @@
     "postcss": "^8.4.23",
     "prisma": "^6.13.0",
     "tailwindcss": "^3.3.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
 }
