@@ -141,3 +141,7 @@ export function parseUserQuantity(value: string): number {
   
   return number
 }
+
+// Alias para manter compatibilidade
+export const parseQuantity = parseUserQuantity
+export const parseCurrency = parseUserCurrency

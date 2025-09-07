@@ -1,0 +1,80 @@
+{
+  "date": "2025-09-07T14:22:11.969Z",
+  "assets": [
+    {
+      "id": "cmf9rm6kz0000gu684ifdbgum",
+      "createdAt": "2025-09-07T14:05:25.321Z",
+      "updatedAt": "2025-09-07T14:05:25.321Z",
+      "type": "TESOURO_DIRETO",
+      "ticker": "TESOURO-IPCA-2029",
+      "name": "Tesouro IPCA+ 2029 (Teste)",
+      "currency": "BRL",
+      "description": "Título de teste para validar cálculos de DY para Tesouro IPCA+",
+      "sector": null,
+      "dividendYield": null,
+      "priceToEarnings": null,
+      "priceToBook": null,
+      "netMargin": null,
+      "roic": null,
+      "indexador": "IPCA",
+      "taxa": 5.83,
+      "vencimento": "2029-08-15T00:00:00.000Z"
+    },
+    {
+      "id": "cmf9rwvsw0005gu68ktpvjajh",
+      "createdAt": "2025-09-07T14:13:44.576Z",
+      "updatedAt": "2025-09-07T14:15:49.094Z",
+      "type": "TESOURO_DIRETO",
+      "ticker": "TESOUROMAN",
+      "name": "TESOURO MANUALMENTE ADICIONADO",
+      "currency": "BRL",
+      "description": "TESTE manual para ver os campos necessário para add ou editar o Tesouro. EDIÇÃO: Primeiro adiciona e depois tem que editar para acertar o indexador, a taxa a.a. e o vencimanto.",
+      "sector": null,
+      "dividendYield": null,
+      "priceToEarnings": null,
+      "priceToBook": null,
+      "netMargin": null,
+      "roic": null,
+      "indexador": null,
+      "taxa": null,
+      "vencimento": null
+    }
+  ],
+  "transactions": [
+    {
+      "id": "cmf9rm6mi0004gu686sfi1evv",
+      "createdAt": "2025-09-07T14:05:25.386Z",
+      "updatedAt": "2025-09-07T14:05:25.386Z",
+      "date": "2024-01-01T00:00:00.000Z",
+      "type": "COMPRA",
+      "quantity": 1,
+      "price": 2500,
+      "fees": null,
+      "notes": "Transação de teste para Tesouro IPCA+",
+      "assetId": "cmf9rm6kz0000gu684ifdbgum"
+    },
+    {
+      "id": "cmf9s63c70007gu686tfrigp7",
+      "createdAt": "2025-09-07T14:20:54.247Z",
+      "updatedAt": "2025-09-07T14:20:54.247Z",
+      "date": "2025-09-07T15:00:00.000Z",
+      "type": "COMPRA",
+      "quantity": 5,
+      "price": 2000,
+      "fees": null,
+      "notes": "operação de teste",
+      "assetId": "cmf9rwvsw0005gu68ktpvjajh"
+    }
+  ],
+  "prices": [
+    {
+      "id": "cmf9rm6m60002gu68ztamc759",
+      "createdAt": "2025-09-07T14:05:25.375Z",
+      "date": "2025-09-07T14:05:25.373Z",
+      "price": 2800.5,
+      "volume": 100,
+      "dividendYield": null,
+      "assetId": "cmf9rm6kz0000gu684ifdbgum"
+    }
+  ]
+}

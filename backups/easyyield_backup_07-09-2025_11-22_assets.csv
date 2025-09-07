@@ -1,0 +1,3 @@
+ticker,name,type,currency,description
+TESOURO-IPCA-2029,Tesouro IPCA+ 2029 (Teste),TESOURO_DIRETO,BRL,Título de teste para validar cálculos de DY para Tesouro IPCA+
+TESOUROMAN,TESOURO MANUALMENTE ADICIONADO,TESOURO_DIRETO,BRL,"TESTE manual para ver os campos necessário para add ou editar o Tesouro. EDIÇÃO: Primeiro adiciona e depois tem que editar para acertar o indexador, a taxa a.a. e o vencimanto."
