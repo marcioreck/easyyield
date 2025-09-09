@@ -9,9 +9,10 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const resolvedParams = await params
     const transactions = await prisma.transaction.findMany({
       where: {
-        assetId: params.id
+        assetId: resolvedParams.id
       },
       orderBy: {
         date: 'desc'

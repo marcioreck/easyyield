@@ -9,7 +9,8 @@ interface RouteParams {
 
 export async function GET(request: Request, { params }: RouteParams) {
   try {
-    const position = await calculateAssetPosition(params.id)
+    const resolvedParams = await params
+    const position = await calculateAssetPosition(resolvedParams.id)
     if (!position) {
       return NextResponse.json(
         { error: 'Asset position not found' },

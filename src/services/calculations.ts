@@ -122,6 +122,7 @@ export async function calculatePortfolioSummary() {
 
 export async function calculateAssetHistory(assetId: string, fromDate: Date, toDate: Date) {
   try {
+    // Busca preços no período especificado
     const prices = await prisma.price.findMany({
       where: {
         assetId,
@@ -133,7 +134,8 @@ export async function calculateAssetHistory(assetId: string, fromDate: Date, toD
       orderBy: { date: 'asc' }
     })
 
-    const transactions = await prisma.transaction.findMany({
+    // Busca TODAS as transações até a data final (para calcular posição correta)
+    const allTransactions = await prisma.transaction.findMany({
       where: {
         assetId,
         date: {
@@ -143,34 +145,69 @@ export async function calculateAssetHistory(assetId: string, fromDate: Date, toD
       orderBy: { date: 'asc' }
     })
 
-    let history = []
+    // Calcula posição inicial (antes do fromDate)
     let quantity = 0
     let totalInvested = 0
-    let averagePrice = 0
+    let transactionsInPeriod = [...allTransactions]
+    
+    // Processa transações antes do período para ter posição inicial correta
+    const transactionsBeforePeriod = allTransactions.filter(t => t.date < fromDate)
+    for (const transaction of transactionsBeforePeriod) {
+      if (transaction.type === 'COMPRA') {
+        quantity += transaction.quantity
+        totalInvested += transaction.quantity * transaction.price
+      } else {
+        quantity -= transaction.quantity
+        // Mantém o custo médio proporcional
+        if (quantity > 0) {
+          const avgPrice = totalInvested / (quantity + transaction.quantity)
+          totalInvested = quantity * avgPrice
+        } else {
+          totalInvested = 0
+        }
+      }
+    }
+    
+    // Filtra transações para só as do período
+    transactionsInPeriod = allTransactions.filter(t => t.date >= fromDate && t.date <= toDate)
+
+    const history = []
+    let currentQuantity = quantity
+    let currentTotalInvested = totalInvested
+    const averagePrice = currentQuantity > 0 ? currentTotalInvested / currentQuantity : 0
 
     for (const price of prices) {
       // Atualiza posição com transações até esta data
-      while (transactions.length > 0 && transactions[0].date <= price.date) {
-        const transaction = transactions.shift()!
+      while (transactionsInPeriod.length > 0 && transactionsInPeriod[0].date <= price.date) {
+        const transaction = transactionsInPeriod.shift()!
         if (transaction.type === 'COMPRA') {
-          quantity += transaction.quantity
-          totalInvested += transaction.quantity * transaction.price
-          averagePrice = totalInvested / quantity
+          currentQuantity += transaction.quantity
+          currentTotalInvested += transaction.quantity * transaction.price
         } else {
-          quantity -= transaction.quantity
-          totalInvested = quantity * averagePrice
+          currentQuantity -= transaction.quantity
+          // Mantém custo médio proporcional
+          if (currentQuantity > 0) {
+            const avgPrice = currentTotalInvested / (currentQuantity + transaction.quantity)
+            currentTotalInvested = currentQuantity * avgPrice
+          } else {
+            currentTotalInvested = 0
+          }
         }
       }
+
+      const currentTotal = currentQuantity * price.price
+      const absoluteReturn = currentTotal - currentTotalInvested
+      const percentReturn = currentTotalInvested > 0 ? (absoluteReturn / currentTotalInvested) * 100 : 0
 
       history.push({
         date: price.date,
         price: price.price,
-        quantity,
-        averagePrice,
-        totalInvested,
-        currentTotal: quantity * price.price,
-        absoluteReturn: (quantity * price.price) - totalInvested,
-        percentReturn: totalInvested > 0 ? (((quantity * price.price) - totalInvested) / totalInvested) * 100 : 0,
+        quantity: currentQuantity,
+        averagePrice: currentQuantity > 0 ? currentTotalInvested / currentQuantity : 0,
+        totalInvested: currentTotalInvested,
+        currentTotal,
+        absoluteReturn,
+        percentReturn,
         dividendYield: price.dividendYield
       })
     }

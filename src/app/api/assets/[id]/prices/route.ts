@@ -9,9 +9,10 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const resolvedParams = await params
     const prices = await prisma.price.findMany({
       where: {
-        assetId: params.id
+        assetId: resolvedParams.id
       },
       include: {
         asset: true

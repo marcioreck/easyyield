@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Asset, Transaction } from '@prisma/client'
 import { formatCurrency, formatDate, formatPercent } from '@/utils/format'
 import { calculateTreasuryIPCADividendYield, isTreasuryIPCA } from '@/services/treasuryCalculations'
+import SemiannualPayments from '@/components/SemiannualPayments'
 
 interface AssetWithDetails extends Asset {
   transactions: Transaction[]
@@ -13,6 +14,7 @@ interface AssetWithDetails extends Asset {
     price: number
     volume?: number
   }[]
+  pagaJurosSemestrais?: boolean | null
 }
 
 interface AssetPosition {
@@ -43,6 +45,28 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
       fetchAssetDetails()
     }
   }, [resolvedParams])
+
+  const getNextPaymentDates = () => {
+    const currentDate = new Date()
+    const currentYear = currentDate.getFullYear()
+    const nextYear = currentYear + 1
+    
+    const january = new Date(currentYear, 0, 15) // Janeiro 15
+    const july = new Date(currentYear, 6, 15) // Julho 15
+    const nextJanuary = new Date(nextYear, 0, 15) // Janeiro 15 próximo ano
+    
+    const upcomingDates = []
+    
+    if (currentDate < january) {
+      upcomingDates.push(`15/01/${currentYear}`, `15/07/${currentYear}`)
+    } else if (currentDate < july) {
+      upcomingDates.push(`15/07/${currentYear}`, `15/01/${nextYear}`)
+    } else {
+      upcomingDates.push(`15/01/${nextYear}`, `15/07/${nextYear}`)
+    }
+    
+    return upcomingDates.join(', ')
+  }
 
   const fetchAssetDetails = async () => {
     if (!resolvedParams) return
@@ -159,6 +183,28 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                 )}
                 {asset.vencimento && (
                   <div><strong>Vencimento:</strong> {formatDate(new Date(asset.vencimento))}</div>
+                )}
+                {asset.pagaJurosSemestrais !== null && (
+                  <div className="bg-yellow-50 p-3 rounded mt-2">
+                    <div className="flex items-center">
+                      <span className={`inline-block w-3 h-3 rounded-full mr-2 ${
+                        asset.pagaJurosSemestrais ? 'bg-green-500' : 'bg-gray-400'
+                      }`}></span>
+                      <strong>Pagamentos:</strong>
+                      <span className="ml-2">
+                        {asset.pagaJurosSemestrais 
+                          ? 'Juros Semestrais (Janeiro e Julho)' 
+                          : 'Apenas no Vencimento'
+                        }
+                      </span>
+                    </div>
+                    {asset.pagaJurosSemestrais && (
+                      <div className="mt-2 text-sm text-gray-700">
+                        <div>Próximos pagamentos:</div>
+                        <div>• {getNextPaymentDates()}</div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             )}
@@ -283,6 +329,13 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Histórico de Pagamentos Semestrais - só mostra para ativos com juros semestrais */}
+      {asset.pagaJurosSemestrais && resolvedParams && (
+        <div className="mb-6">
+          <SemiannualPayments assetId={resolvedParams.id} />
         </div>
       )}
 

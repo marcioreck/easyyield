@@ -49,11 +49,32 @@ export default function Home() {
   }
 
   if (loading) {
-    return <div>Carregando...</div>
+    return <div className="text-center py-8">Carregando...</div>
   }
 
   if (!summary) {
-    return <div>Erro ao carregar dados</div>
+    return <div className="text-center py-8">Erro ao carregar dados</div>
+  }
+
+  // Filtrar ativos com pagamentos semestrais
+  const semiannualAssets = summary.positions.filter(p => 
+    p.asset.type === 'TESOURO_DIRETO' && (p.asset as any).pagaJurosSemestrais
+  )
+
+  const getNextSemiannualDates = () => {
+    const currentDate = new Date()
+    const currentYear = currentDate.getFullYear()
+    const january = new Date(currentYear, 0, 15)
+    const july = new Date(currentYear, 6, 15)
+    const nextJanuary = new Date(currentYear + 1, 0, 15)
+
+    if (currentDate < january) {
+      return [january, july]
+    } else if (currentDate < july) {
+      return [july, nextJanuary]
+    } else {
+      return [nextJanuary, new Date(currentYear + 1, 6, 15)]
+    }
   }
 
   return (
@@ -118,7 +139,46 @@ export default function Home() {
         selectedPeriod={selectedPeriod}
       />
 
-      <PortfolioCharts />
+      {/* Seção de Próximos Pagamentos */}
+      {semiannualAssets.length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow mb-8">
+          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+            📅 Próximos Pagamentos Semestrais
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">Próximas Datas</h4>
+              {getNextSemiannualDates().map((date, index) => (
+                <div key={index} className="text-sm text-blue-700">
+                  {date.toLocaleDateString('pt-BR', { 
+                    day: '2-digit', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </div>
+              ))}
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h4 className="font-medium text-green-900 mb-2">Ativos Participantes</h4>
+              {semiannualAssets.map(position => (
+                <div key={position.asset.id} className="text-sm text-green-700 mb-1">
+                  <a 
+                    href={`/assets/${position.asset.id}`} 
+                    className="hover:underline"
+                  >
+                    {position.asset.ticker}
+                  </a>
+                  <span className="text-gray-600 ml-2">
+                    ({formatCurrency(position.currentTotal!, position.asset.currency)})
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PortfolioCharts period={selectedPeriod} />
 
       <div className="mt-8">
         <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
@@ -130,6 +190,7 @@ export default function Home() {
               <tr className="bg-gray-100">
                 <th className="border p-2 text-left">Ativo</th>
                 <th className="border p-2 text-left">Tipo</th>
+                <th className="border p-2 text-center">Pagamentos</th>
                 <th className="border p-2 text-right">Quantidade</th>
                 <th className="border p-2 text-right">Preço Médio</th>
                 <th className="border p-2 text-right">Preço Atual</th>
@@ -154,6 +215,21 @@ export default function Home() {
                       </a>
                     </td>
                     <td className="border p-2">{position.asset.type}</td>
+                    <td className="border p-2 text-center">
+                      {position.asset.type === 'TESOURO_DIRETO' && (position.asset as any).pagaJurosSemestrais ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                          <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                          Semestral
+                        </span>
+                      ) : ['TESOURO_DIRETO', 'CDB', 'DEBENTURE', 'CRI', 'FI_INFRA'].includes(position.asset.type) ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
+                          <span className="w-2 h-2 bg-gray-400 rounded-full mr-1"></span>
+                          Vencimento
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
                     <td className="border p-2 text-right">
                       {position.quantity.toLocaleString('pt-BR', {
                         minimumFractionDigits: 2,

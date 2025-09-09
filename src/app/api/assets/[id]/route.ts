@@ -10,8 +10,9 @@ interface RouteParams {
 
 export async function GET(request: Request, { params }: RouteParams) {
   try {
+    const resolvedParams = await params
     const asset = await prisma.asset.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         transactions: true,
         prices: {
@@ -40,6 +41,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 export async function PUT(request: Request, { params }: RouteParams) {
   try {
+    const resolvedParams = await params
     const body = await request.json()
     
     // Validar tipo do ativo
@@ -59,7 +61,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     const asset = await prisma.asset.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         ticker: body.ticker,
         name: body.name,
@@ -92,8 +94,9 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
 export async function DELETE(request: Request, { params }: RouteParams) {
   try {
+    const resolvedParams = await params
     await prisma.asset.delete({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
 
     return new NextResponse(null, { status: 204 })

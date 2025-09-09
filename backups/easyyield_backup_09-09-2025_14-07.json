@@ -1,0 +1,50 @@
+{
+  "date": "2025-09-09T17:07:56.207Z",
+  "assets": [
+    {
+      "id": "cmfcsqd7s0000gud39i9wibde",
+      "createdAt": "2025-09-09T16:59:58.692Z",
+      "updatedAt": "2025-09-09T16:59:58.692Z",
+      "type": "TESOURO_DIRETO",
+      "ticker": "T2050A3.71",
+      "name": "IPCA+ 2050 Aplicado em 04/09/2019",
+      "currency": "BRL",
+      "description": "TESOURO IPCA+ COM JUROS SEMESTRAIS 2050, VENCIMENTO: 15/08/2050, Quantidade 2 ao preço de 4589.86 em 2019-09-04.",
+      "sector": null,
+      "dividendYield": null,
+      "priceToEarnings": null,
+      "priceToBook": null,
+      "netMargin": null,
+      "roic": null,
+      "indexador": "IPCA",
+      "taxa": 3.71,
+      "vencimento": "2025-08-15T00:00:00.000Z",
+      "pagaJurosSemestrais": true
+    }
+  ],
+  "transactions": [
+    {
+      "id": "cmfcssit50002gud3o2bze87g",
+      "createdAt": "2025-09-09T17:01:39.258Z",
+      "updatedAt": "2025-09-09T17:01:39.258Z",
+      "date": "2019-09-04T15:00:00.000Z",
+      "type": "COMPRA",
+      "quantity": 2,
+      "price": 4589.86,
+      "fees": null,
+      "notes": "Rentabilidade Contratada: IPCA + 3,71%",
+      "assetId": "cmfcsqd7s0000gud39i9wibde"
+    }
+  ],
+  "prices": [
+    {
+      "id": "cmfcswcyo0004gud3e1mvz5u9",
+      "createdAt": "2025-09-09T17:04:38.304Z",
+      "date": "2025-09-09T15:00:00.000Z",
+      "price": 3881.07,
+      "volume": 0,
+      "dividendYield": null,
+      "assetId": "cmfcsqd7s0000gud39i9wibde"
+    }
+  ]
+}

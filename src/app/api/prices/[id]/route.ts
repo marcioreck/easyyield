@@ -9,9 +9,10 @@ interface RouteParams {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    const resolvedParams = await params
     await prisma.price.delete({
       where: {
-        id: params.id
+        id: resolvedParams.id
       }
     })
 

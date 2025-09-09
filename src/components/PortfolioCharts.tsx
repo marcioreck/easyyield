@@ -35,33 +35,44 @@ interface ChartData {
     label: string
     data: number[]
     borderColor?: string
-    backgroundColor?: string
+    backgroundColor?: string | string[]
+    fill?: boolean
+    tension?: number
   }[]
 }
 
-export function PortfolioCharts() {
+export function PortfolioCharts({ period = 'all' }: { period?: string }) {
   const [evolutionData, setEvolutionData] = useState<ChartData | null>(null)
   const [distributionData, setDistributionData] = useState<ChartData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchChartData()
-  }, [])
+  }, [period])
 
   const fetchChartData = async () => {
     try {
       // Busca dados de evolução patrimonial
-      const evolutionResponse = await fetch('/api/portfolio/evolution')
+      const evolutionResponse = await fetch(`/api/portfolio/evolution?period=${period}`)
       const evolutionResult = await evolutionResponse.json()
 
       if (evolutionResult.success) {
         setEvolutionData({
-          labels: evolutionResult.data.map((d: any) => d.date),
+          labels: evolutionResult.data.map((d: any) => {
+            const date = new Date(d.date)
+            return date.toLocaleDateString('pt-BR', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: '2-digit' 
+            })
+          }),
           datasets: [{
             label: 'Patrimônio Total',
             data: evolutionResult.data.map((d: any) => d.total),
             borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            fill: true,
+            tension: 0.1
           }]
         })
       }
