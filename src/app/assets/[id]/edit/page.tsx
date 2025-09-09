@@ -46,6 +46,7 @@ interface FormData {
   indexador?: string
   taxa?: number
   vencimento?: string
+  pagaJurosSemestrais?: boolean
 }
 
 export default function EditAssetPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,7 +77,8 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
           description: data.description || '',
           indexador: data.indexador,
           taxa: data.taxa,
-          vencimento: data.vencimento ? new Date(data.vencimento).toISOString().split('T')[0] : undefined
+          vencimento: data.vencimento ? new Date(data.vencimento).toISOString().split('T')[0] : undefined,
+          pagaJurosSemestrais: data.pagaJurosSemestrais || false
         })
       }
     } catch (error) {
@@ -209,6 +211,21 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                 onChange={(e) => setFormData({...formData, vencimento: e.target.value})}
                 className="w-full border p-2 rounded"
               />
+            </div>
+
+            <div>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.pagaJurosSemestrais || false}
+                  onChange={(e) => setFormData({...formData, pagaJurosSemestrais: e.target.checked})}
+                  className="rounded"
+                />
+                <span>Paga juros semestrais (Janeiro e Julho)</span>
+              </label>
+              <p className="text-sm text-gray-600 mt-1">
+                Marque esta opção se o título distribui juros a cada 6 meses
+              </p>
             </div>
           </>
         )}

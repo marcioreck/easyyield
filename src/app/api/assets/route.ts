@@ -58,6 +58,7 @@ export async function POST(request: Request) {
         indexador: body.indexador || null,
         taxa: body.taxa ? parseFloat(body.taxa) : null,
         vencimento: body.vencimento ? new Date(body.vencimento) : null,
+        pagaJurosSemestrais: body.pagaJurosSemestrais || false,
       }
     })
 

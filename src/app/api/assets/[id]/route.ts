@@ -76,6 +76,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
         indexador: body.indexador || null,
         taxa: body.taxa ? parseFloat(body.taxa) : null,
         vencimento: body.vencimento ? new Date(body.vencimento) : null,
+        pagaJurosSemestrais: body.pagaJurosSemestrais || false,
       }
     })
 

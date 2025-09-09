@@ -13,7 +13,8 @@ export default function NewAssetPage() {
     description: '',
     indexador: '',
     taxa: '',
-    vencimento: ''
+    vencimento: '',
+    pagaJurosSemestrais: false
   })
   const [errors, setErrors] = useState<ValidationError[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -190,6 +191,21 @@ export default function NewAssetPage() {
               {getFieldError('vencimento') && (
                 <p className="text-red-500 text-sm mt-1">{getFieldError('vencimento')}</p>
               )}
+            </div>
+
+            <div>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.pagaJurosSemestrais}
+                  onChange={(e) => setFormData({...formData, pagaJurosSemestrais: e.target.checked})}
+                  className="rounded"
+                />
+                <span>Paga juros semestrais (Janeiro e Julho)</span>
+              </label>
+              <p className="text-sm text-gray-600 mt-1">
+                Marque esta opção se o título distribui juros a cada 6 meses
+              </p>
             </div>
           </>
         )}

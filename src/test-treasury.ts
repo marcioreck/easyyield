@@ -23,7 +23,8 @@ async function testTreasuryIPCA() {
     priceToEarnings: null,
     priceToBook: null,
     netMargin: null,
-    roic: null
+    roic: null,
+    pagaJurosSemestrais: false
   }
 
   // Preço atual simulado

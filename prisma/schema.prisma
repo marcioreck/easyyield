@@ -53,6 +53,7 @@ model Asset {
   indexador         String?  // IPCA, CDI, etc.
   taxa             Float?   // Taxa do papel (% a.a.)
   vencimento       DateTime? // Data de vencimento
+  pagaJurosSemestrais Boolean? @default(false) // Se paga juros a cada 6 meses
   
   // Relacionamentos
   transactions Transaction[]

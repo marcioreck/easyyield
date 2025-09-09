@@ -23,6 +23,10 @@ const IPCA_HISTORICO_ANUAL = [
  * 1. Taxa real (fixa do papel)  
  * 2. IPCA acumulado do período
  * 
+ * Para títulos com pagamento semestral, considera:
+ * - Pagamentos de juros em Janeiro e Julho
+ * - Desconto dos juros já pagos no ano para evitar dupla contagem
+ * 
  * O DY é calculado como: (Taxa Real + IPCA) sobre o preço atual
  */
 export function calculateTreasuryIPCADividendYield(
@@ -51,11 +55,57 @@ export function calculateTreasuryIPCADividendYield(
   // Taxa total = Taxa real + IPCA
   const taxaTotal = config.taxa + ipcaAnual
   
+  // Para títulos com pagamento semestral, ajusta o cálculo
+  if (asset.pagaJurosSemestrais) {
+    return calculateSemiannualDividendYield(asset, currentPrice, taxaTotal, referenceDate)
+  }
+  
   // Calcula o rendimento anual esperado sobre o preço atual
   const rendimentoAnual = (currentPrice * taxaTotal) / 100
   
   // DY = Rendimento anual / Preço atual * 100
   const dividendYield = (rendimentoAnual / currentPrice) * 100
+  
+  return dividendYield
+}
+
+/**
+ * Calcula o DY para títulos com pagamentos semestrais
+ * Considera os pagamentos de juros em Janeiro e Julho
+ */
+function calculateSemiannualDividendYield(
+  asset: Asset,
+  currentPrice: number,
+  taxaTotal: number,
+  referenceDate: Date
+): number {
+  const currentMonth = referenceDate.getMonth() + 1 // Janeiro = 1, Dezembro = 12
+  
+  // Calcula quantos pagamentos restam no ano
+  let paymentsRemaining = 0
+  
+  // Pagamentos em Janeiro (mês 1) e Julho (mês 7)
+  if (currentMonth <= 1) {
+    paymentsRemaining = 2 // Janeiro e Julho ainda vão ocorrer
+  } else if (currentMonth <= 7) {
+    paymentsRemaining = 1 // Apenas Julho ainda vai ocorrer
+  } else {
+    paymentsRemaining = 0 // Já passaram os dois pagamentos do ano
+  }
+  
+  // Se não há pagamentos restantes no ano, considera pagamentos do próximo ano
+  if (paymentsRemaining === 0) {
+    paymentsRemaining = 2 // Janeiro e Julho do próximo ano
+  }
+  
+  // Cada pagamento semestral é metade da taxa anual
+  const semiannualRate = taxaTotal / 2
+  
+  // Calcula o rendimento esperado baseado nos pagamentos restantes
+  const expectedReturn = (currentPrice * semiannualRate * paymentsRemaining) / 100
+  
+  // DY = Rendimento esperado / Preço atual * 100
+  const dividendYield = (expectedReturn / currentPrice) * 100
   
   return dividendYield
 }
