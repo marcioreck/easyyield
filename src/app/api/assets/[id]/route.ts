@@ -72,6 +72,10 @@ export async function PUT(request: Request, { params }: RouteParams) {
         priceToBook: body.priceToBook,
         netMargin: body.netMargin,
         roic: body.roic,
+        // Campos específicos para renda fixa
+        indexador: body.indexador || null,
+        taxa: body.taxa ? parseFloat(body.taxa) : null,
+        vencimento: body.vencimento ? new Date(body.vencimento) : null,
       }
     })
 

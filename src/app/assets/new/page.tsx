@@ -10,7 +10,10 @@ export default function NewAssetPage() {
     name: '',
     type: 'ACAO_BR',
     currency: 'BRL',
-    description: ''
+    description: '',
+    indexador: '',
+    taxa: '',
+    vencimento: ''
   })
   const [errors, setErrors] = useState<ValidationError[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -53,6 +56,9 @@ export default function NewAssetPage() {
   const getFieldError = (field: string) => {
     return errors.find(error => error.field === field)?.message
   }
+
+  // Determina se deve mostrar campos específicos de renda fixa
+  const showRendaFixaFields = ['TESOURO_DIRETO', 'CDB', 'DEBENTURE', 'CRI', 'FI_INFRA'].includes(formData.type)
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -111,6 +117,8 @@ export default function NewAssetPage() {
             <option value="ACAO_BR">Ação BR</option>
             <option value="ACAO_US">Ação US</option>
             <option value="DEBENTURE">Debênture</option>
+            <option value="CRI">CRI</option>
+            <option value="FI_INFRA">FI-Infra</option>
             <option value="RENDA_FIXA_DIGITAL">Renda Fixa Digital</option>
             <option value="STAKING_CRYPTO">Staking Crypto</option>
             <option value="OUTROS">Outros</option>
@@ -135,6 +143,56 @@ export default function NewAssetPage() {
             <p className="text-red-500 text-sm mt-1">{getFieldError('currency')}</p>
           )}
         </div>
+
+        {showRendaFixaFields && (
+          <>
+            <div>
+              <label className="block mb-1">Indexador</label>
+              <select
+                value={formData.indexador}
+                onChange={(e) => setFormData({...formData, indexador: e.target.value})}
+                className={`w-full border p-2 rounded ${getFieldError('indexador') ? 'border-red-500' : ''}`}
+              >
+                <option value="">Selecione...</option>
+                <option value="PRE">Prefixado</option>
+                <option value="CDI">CDI</option>
+                <option value="IPCA">IPCA</option>
+                <option value="SELIC">SELIC</option>
+              </select>
+              {getFieldError('indexador') && (
+                <p className="text-red-500 text-sm mt-1">{getFieldError('indexador')}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block mb-1">Taxa (% a.a.)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.taxa}
+                onChange={(e) => setFormData({...formData, taxa: e.target.value})}
+                className={`w-full border p-2 rounded ${getFieldError('taxa') ? 'border-red-500' : ''}`}
+                placeholder="Ex: 5.83"
+              />
+              {getFieldError('taxa') && (
+                <p className="text-red-500 text-sm mt-1">{getFieldError('taxa')}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block mb-1">Vencimento</label>
+              <input
+                type="date"
+                value={formData.vencimento}
+                onChange={(e) => setFormData({...formData, vencimento: e.target.value})}
+                className={`w-full border p-2 rounded ${getFieldError('vencimento') ? 'border-red-500' : ''}`}
+              />
+              {getFieldError('vencimento') && (
+                <p className="text-red-500 text-sm mt-1">{getFieldError('vencimento')}</p>
+              )}
+            </div>
+          </>
+        )}
 
         <div>
           <label className="block mb-1">Descrição (opcional)</label>

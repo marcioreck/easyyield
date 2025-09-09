@@ -25,6 +25,9 @@ export function Navigation() {
             <Link href="/transactions" className="hover:underline">
               Operações
             </Link>
+            <Link href="/prices" className="hover:underline">
+              Preços
+            </Link>
             <Link href="/settings" className="hover:underline">
               Configurações
             </Link>
@@ -84,6 +87,13 @@ export function Navigation() {
               onClick={() => setIsMenuOpen(false)}
             >
               Operações
+            </Link>
+            <Link
+              href="/prices"
+              className="block py-2 px-4 hover:bg-blue-700 rounded"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Preços
             </Link>
             <Link
               href="/settings"
