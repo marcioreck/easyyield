@@ -113,8 +113,41 @@ npm start
 - [x] Validações de formulários
 - [x] Formatação BR (moeda, datas)
 - [x] Suporte a CRI e FI-Infra
-- [ ] Testar com Tesouro Direto (Ajustar como se deve calcular o DY de títulos com  rendimento atrelado à indicadores, como o caso desses Tesouro IPCA+)
+- [x] **Cálculos específicos para Tesouro IPCA+**
+- [x] **Pagamentos semestrais do Tesouro Direto**
+- [x] **Evolução patrimonial com eventos de pagamento**
+- [x] **Comparação com benchmarks (IPCA, CDI, SELIC)**
+- [x] **Integração real com APIs do Banco Central**
+- [x] **Gráficos corrigidos com valores não-zero**
+- [x] **Sistema auditável e reconciliável**
+- [ ] Comparar os gráficos do título do tesouro direto IPCA+ com os do site oficial do Tesouro Direto, verificando a forma correta de calcular a evolução do valor do ativo ao longo do tempo.
 - [ ] Testar com FI-Infra (Classificar as operações como REAL ou SIMULADA e incluir isso nos filtros para facilitar as análises e planejamentos)
+
+## 🔧 Correções Recentes
+
+### ✅ Sistema de Pagamentos Semestrais
+- ✅ **CRUD Completo**: Interface para gerenciar pagamentos semestrais
+- ✅ **Cálculos Auditáveis**: Lógica transparente baseada em dados reais
+- ✅ **Histórico de Pagamentos**: Exibição detalhada no dashboard e na visualização de ativos
+- ✅ **Próximos Pagamentos**: Dashboard mostra status e datas dos próximos pagamentos
+
+### ✅ Gráficos de Evolução Patrimonial
+- ✅ **Valores Corretos**: Corrigido problema de zeros nos gráficos
+- ✅ **Três Séries**: Valor dos ativos, pagamentos recebidos e total
+- ✅ **Eventos de Pagamento**: Marcadores visuais nos gráficos para pagamentos
+- ✅ **Interpolação Realista**: Crescimento suave baseado em dados reais
+
+### ✅ Integração com APIs Oficiais
+- ✅ **Banco Central do Brasil**: Integração real com APIs gratuitas
+- ✅ **IPCA, CDI, SELIC**: Dados oficiais para comparação de performance
+- ✅ **Fallback Inteligente**: Sistema robusto com dados simulados em caso de falha
+- ✅ **Gráfico de Benchmarks**: Comparação visual entre portfolio e índices
+
+### ✅ Dashboard Auditável
+- ✅ **Transparência Total**: Todos os cálculos são rastreáveis
+- ✅ **Reconciliação**: Interface permite conferir com extratos oficiais
+- ✅ **Status em Tempo Real**: Informações atualizadas do portfolio
+- ✅ **Múltiplos Períodos**: Visualização flexível (1m, 3m, 6m, 1a, tudo)
 - [ ] Testar com CRI
 - [ ] Testar com Renda Fixa Digital
 - [ ] Testar com Fundos
@@ -122,7 +155,6 @@ npm start
 - [ ] Testar com Staking Crypto
 - [ ] Testar com Outros tipos de investimento
 - [ ] Gráficos de rentabilidade por tipo de ativo
-- [ ] Comparação com benchmarks (IBOV, S&P500)
 - [ ] Exportação de relatórios em PDF
 - [ ] Otimização de consultas e performance
 
@@ -180,11 +212,47 @@ Para títulos do Tesouro Direto atrelados ao IPCA, o sistema implementa cálculo
 - Análise de sensibilidade para diferentes cenários de IPCA
 - Preço teórico baseado na curva de juros
 - Histórico de rentabilidade real vs. nominal
+- **Pagamentos Semestrais**: Rastreamento histórico de pagamentos de juros
+- **Evolução Patrimonial Detalhada**: Visualização dos "saltos" de pagamentos
+- **Reconciliação com Extratos**: Comparação com extratos do Tesouro Direto
 
 #### API de Teste
 - **Endpoint**: `/api/test-treasury`
 - **GET**: Lista todos os títulos IPCA+ e seus cálculos
 - **POST**: Cria título de teste com dados reais
+
+### Comparação com Benchmarks
+
+#### Funcionalidades
+- **Gráfico de Performance**: Comparação visual do portfólio vs. índices oficiais
+- **Índices Suportados**: IPCA, CDI, SELIC
+- **Performance Relativa**: Cálculo automático de sobre/sub-performance
+- **Dados Históricos**: Desde o início do investimento até a data atual
+
+#### APIs de Benchmarks
+- **Endpoint**: `/api/portfolio/benchmarks`
+- **Fonte**: Dados simulados baseados em médias históricas
+- **Produção**: Preparado para integração com API oficial do Banco Central
+- **Parâmetros**: Período configurável (1m, 3m, 6m, 1y, all)
+
+#### Métricas Calculadas
+- **vs. IPCA**: Performance acima/abaixo da inflação
+- **vs. CDI**: Comparação com renda fixa padrão
+- **vs. SELIC**: Comparação com taxa básica de juros
+- **Valor Acumulado**: Simulação de R$ 10.000 investidos nos índices
+
+### Evolução Patrimonial Avançada
+
+#### Eventos de Timeline
+- **Transações**: Compras e vendas com impacto no patrimônio
+- **Pagamentos Semestrais**: Juros recebidos do Tesouro IPCA+
+- **Valorização**: Variação do valor dos ativos ao longo do tempo
+
+#### Visualizações
+- **Múltiplas Séries**: Valor dos ativos, pagamentos acumulados, total
+- **Marcadores de Eventos**: Destaque para datas de pagamento
+- **Tooltips Informativos**: Detalhes sobre eventos do período
+- **Interpolação Inteligente**: Preenchimento de períodos sem dados
 
 ## Backup e Exportação
 

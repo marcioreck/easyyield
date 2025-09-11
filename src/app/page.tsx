@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { AssetType } from '@prisma/client'
 import { Card } from '@/components/Card'
 import { PortfolioCharts } from '@/components/PortfolioCharts'
+import { PerformanceBenchmarkChart } from '@/components/PerformanceBenchmarkChart'
 import { PortfolioFilters } from '@/components/PortfolioFilters'
 import { PerformanceReport } from '@/components/PerformanceReport'
 import { ImportTransactions } from '@/components/ImportTransactions'
@@ -179,6 +180,11 @@ export default function Home() {
       )}
 
       <PortfolioCharts period={selectedPeriod} />
+
+      {/* Gráfico de Performance vs Benchmarks */}
+      <div className="mt-8">
+        <PerformanceBenchmarkChart period={selectedPeriod} />
+      </div>
 
       <div className="mt-8">
         <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
