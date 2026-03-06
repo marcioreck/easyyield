@@ -37,6 +37,32 @@ export async function searchBrapiAssets(query: string) {
   }
 }
 
+export interface BrapiDividend {
+  date: string
+  amount: number
+  type?: string
+}
+
+export async function getBrapiQuoteWithDividends(symbol: string): Promise<{
+  quote: BrapiQuote | null
+  dividends?: BrapiDividend[]
+}> {
+  try {
+    const response = await api.get(`/quote/${symbol}`, {
+      params: { dividends: true }
+    })
+    const result = response.data.results?.[0]
+    if (!result) return { quote: null }
+    return {
+      quote: result,
+      dividends: result.dividendsData?.dividends ?? result.dividends ?? []
+    }
+  } catch (error) {
+    console.error('Erro ao buscar cotação com dividendos na BRAPI:', error)
+    return { quote: null }
+  }
+}
+
 export async function getBrapiHistoricalData(symbol: string, from: Date, to: Date) {
   try {
     const response = await api.get(`/quote/${symbol}/range`, {

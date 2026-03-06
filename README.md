@@ -2,6 +2,8 @@
 
 Aplicação web para gerenciamento de investimentos no Brasil e nos EUA, permitindo o acompanhamento de diversos tipos de ativos através de importação de cotações de APIs gratuitas e cálculos de Dividend Yield (DY).
 
+**Uso local e pessoal.** O projeto é aberto no GitHub para críticas, sugestões e contribuições (veja [Contribuição](#contribuição) e [Patrocínio](#patrocínio)).
+
 ## Funcionalidades
 
 ### Tipos de Ativos Suportados
@@ -35,6 +37,10 @@ Aplicação web para gerenciamento de investimentos no Brasil e nos EUA, permiti
 - Filtros por tipo de ativo e período
 - Persistência local de dados históricos
 - Backup local em JSON e CSV
+- **Atualização de cotações:** ao abrir o app e uma vez por dia (BRAPI / Yahoo Finance)
+- **Assistente (opcional):** perguntas sobre o portfólio via API de IA (ex.: OpenAI); configure `OPENAI_API_KEY`
+- **Importar ativos por texto:** cole uma tabela ou texto e a IA interpreta e cadastra os ativos
+- **Dividend Yield comparativo:** DY mensal, acumulado e anual por ativo no dashboard
 
 ## Tecnologias Utilizadas
 
@@ -69,9 +75,13 @@ Crie um arquivo `.env` com:
 # Database
 DATABASE_URL="mysql://easyyield_user:easyyield_password@localhost:3306/easyyield"
 
-# APIs
+# APIs de mercado
 ALPHA_VANTAGE_API_KEY=your_key_here
 BRAPI_API_KEY=your_key_here
+
+# API de IA (opcional: Assistente e Importar ativos por texto)
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
 
 # Next Auth
 NEXTAUTH_URL=http://localhost:3000
@@ -120,6 +130,11 @@ npm start
 - [x] **Integração real com APIs do Banco Central**
 - [x] **Gráficos corrigidos com valores não-zero**
 - [x] **Sistema auditável e reconciliável**
+- [x] **Atualização de cotações** ao abrir o app e 1x/dia (endpoint `refresh-all`)
+- [x] **Assistente** com API de IA (OpenAI) para perguntas sobre o portfólio
+- [x] **Importar ativos por texto** (cola de tabela/dados; IA interpreta e cadastra)
+- [x] **Dividend Yield comparativo** (mensal, acumulado, anual) no dashboard
+- [x] **Modelo de dividendos** e importação via BRAPI (ativos BRL)
 - [ ] Comparar os gráficos do título do tesouro direto IPCA+ com os do site oficial do Tesouro Direto, verificando a forma correta de calcular a evolução do valor do ativo ao longo do tempo.
 - [ ] Testar com FI-Infra (Classificar as operações como REAL ou SIMULADA e incluir isso nos filtros para facilitar as análises e planejamentos)
 
@@ -303,8 +318,18 @@ Para títulos do Tesouro Direto atrelados ao IPCA, o sistema implementa cálculo
 
 ## Contribuição
 
+Críticas e sugestões são bem-vindas. Para contribuir com código:
+
 1. Faça um Fork do projeto
 2. Crie uma Branch para sua Feature (`git checkout -b feature/AmazingFeature`)
 3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
 4. Push para a Branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
+
+## Patrocínio
+
+Se o EasyYield for útil para você, considere apoiar o projeto. Veja [.github/FUNDING.yml](.github/FUNDING.yml) para opções (ex.: GitHub Sponsors).
+
+## Segurança
+
+Veja [SECURITY.md](SECURITY.md) para como reportar vulnerabilidades e para os padrões de uso de APIs externas (incluindo LLM).

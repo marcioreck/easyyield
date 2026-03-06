@@ -58,6 +58,7 @@ model Asset {
   // Relacionamentos
   transactions Transaction[]
   prices       Price[]
+  dividends    Dividend[]
   
   @@unique([ticker, currency])
 }
@@ -90,5 +91,25 @@ model Price {
   assetId   String
   asset     Asset    @relation(fields: [assetId], references: [id])
   
+  @@unique([assetId, date])
+}
+
+// Chave-valor para estado da aplicação (ex.: última atualização de cotações)
+model AppSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String?
+  updatedAt DateTime @updatedAt
+}
+
+// Proventos/dividendos por ativo (para cálculo de DY mensal, acumulado e anual)
+model Dividend {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  date      DateTime // Data do pagamento
+  value     Float    // Valor total ou por cota conforme convenção do ativo
+  type      String?  // DIVIDENDO, JCP, RENDIMENTO, etc.
   @@unique([assetId, date])
 }

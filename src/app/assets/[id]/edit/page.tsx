@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { use } from 'react'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
 
 type AssetType = 
   | 'TESOURO_DIRETO'
@@ -116,7 +113,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
     return <div>Carregando...</div>
   }
 
-  const showRendaFixaFields = ['TESOURO_DIRETO', 'CDB', 'DEBENTURE', 'CRI', 'FI_INFRA'].includes(formData.type)
+  const showRendaFixaFields = ['TESOURO_DIRETO', 'POUPANCA', 'CDB', 'DEBENTURE', 'CRI', 'FI_INFRA'].includes(formData.type)
 
   return (
     <div className="max-w-2xl mx-auto p-4">

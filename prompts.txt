@@ -1,0 +1,12 @@
+Leia todo codebase do projeto para entender os objetivos atuais e quanto já foi implementado.
+
+Leia toda documentação para mantê-la atualizada a cada alteração.
+
+### Tarefas dessa rodada de desenvolvimento:
+
+1. Apresente sugestões e planejamento para tornar o projeto mais robusto e escalável, atendendo os novos critérios abaixo:
+- Aproveitar a invovação de processamento ou parte do código do ClawdBot, porque queremos o easyyeld rodando ainda localmente e apenas para uso pessoal;
+- A cada vez que eu acessar, poderá usar uma API LLM que já possuo, como a OpenAI, para processar as solicitações padrão que vamos criar;
+- Preciso ser capaz de fazer o CRUD completo de todos os tipos de ativos financeiros no Brasil e nos EUA;
+- Preciso de um dashboard completo e comparativo, sobretudo do indicador mensal do Dividend Yield (DY), para todos os ativos, e também do Dividend Yield (DY) acumulado, para todos os ativos, e também do Dividend Yield (DY) anual, para todos os ativos; e
+- Não deve desperdiçar tokens ou tornar caro o uso de APIs de LLM.

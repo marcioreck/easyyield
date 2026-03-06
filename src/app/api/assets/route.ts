@@ -2,16 +2,37 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { AssetType, Currency } from '@prisma/client'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const typeParam = searchParams.get('type')
+    const currencyParam = searchParams.get('currency')
+    const types = typeParam ? typeParam.split(',').filter(Boolean) as AssetType[] : undefined
+    const currency = currencyParam === 'BRL' || currencyParam === 'USD' ? currencyParam : undefined
+
     const assets = await prisma.asset.findMany({
+      where: {
+        ...(types?.length ? { type: { in: types } } : {}),
+        ...(currency ? { currency } : {})
+      },
       include: {
         _count: {
           select: { transactions: true }
+        },
+        prices: {
+          orderBy: { date: 'desc' },
+          take: 1,
+          select: { price: true, date: true }
         }
       }
     })
-    return NextResponse.json(assets)
+    const mapped = assets.map(({ prices, ...asset }) => ({
+      ...asset,
+      latestPrice: prices[0]
+        ? { price: prices[0].price, date: prices[0].date.toISOString() }
+        : undefined
+    }))
+    return NextResponse.json(mapped)
   } catch (error) {
     console.error('Error fetching assets:', error)
     return NextResponse.json(

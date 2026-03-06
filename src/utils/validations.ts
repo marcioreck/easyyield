@@ -93,19 +93,19 @@ export async function validateAsset(data: any): Promise<ValidationError[]> {
     }
   }
 
-  // Validações adicionais
-  if (!errors.length) {
-    // Verifica se o ticker já existe
+  // Validações adicionais: unicidade (ticker + currency) conforme schema
+  if (!errors.length && data.ticker != null && data.currency != null) {
     const existingAsset = await prisma.asset.findFirst({
       where: {
-        ticker: data.ticker
+        ticker: data.ticker,
+        currency: data.currency,
+        ...(data.id != null ? { id: { not: data.id } } : {})
       }
     })
-
     if (existingAsset) {
       errors.push({
         field: 'ticker',
-        message: 'Ticker já cadastrado'
+        message: 'Ticker já cadastrado para esta moeda'
       })
     }
   }

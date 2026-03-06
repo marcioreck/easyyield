@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Asset } from '@prisma/client'
+import { ImportAssetsFromText } from '@/components/ImportAssetsFromText'
 
 interface AssetWithPrice extends Asset {
   latestPrice?: {
@@ -14,6 +16,7 @@ export default function AssetsPage() {
   const [assets, setAssets] = useState<AssetWithPrice[]>([])
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState<string | null>(null)
+  const [showImportFromText, setShowImportFromText] = useState(false)
 
   useEffect(() => {
     fetchAssets()
@@ -82,15 +85,30 @@ export default function AssetsPage() {
 
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
         <h1 className="text-2xl font-bold">Ativos</h1>
-        <a
-          href="/assets/new"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Novo Ativo
-        </a>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setShowImportFromText(!showImportFromText)}
+            className="px-4 py-2 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50"
+          >
+            {showImportFromText ? 'Ocultar importação por texto' : 'Importar por texto'}
+          </button>
+          <Link
+            href="/assets/new"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Novo Ativo
+          </Link>
+        </div>
       </div>
+
+      {showImportFromText && (
+        <div className="mb-6">
+          <ImportAssetsFromText onComplete={() => fetchAssets()} />
+        </div>
+      )}
 
       {assets.length === 0 ? (
         <p>Nenhum ativo cadastrado.</p>

@@ -8,6 +8,7 @@ import { PerformanceBenchmarkChart } from '@/components/PerformanceBenchmarkChar
 import { PortfolioFilters } from '@/components/PortfolioFilters'
 import { PerformanceReport } from '@/components/PerformanceReport'
 import { ImportTransactions } from '@/components/ImportTransactions'
+import { DividendYieldDashboard } from '@/components/DividendYieldDashboard'
 import { AssetPosition } from '@/services/calculations'
 import { formatCurrency, formatPercent } from '@/utils/format'
 
@@ -24,11 +25,37 @@ export default function Home() {
   const [selectedTypes, setSelectedTypes] = useState<AssetType[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState('1y')
   const [showImport, setShowImport] = useState(false)
+  const [refreshingQuotes, setRefreshingQuotes] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchSummary()
   }, [selectedTypes, selectedPeriod])
+
+  // Ao abrir o dashboard, dispara atualização de cotações se passou 24h desde a última
+  useEffect(() => {
+    fetch('/api/market-data/refresh-all').catch(() => {})
+  }, [])
+
+  const handleRefreshQuotes = async () => {
+    setRefreshingQuotes(true)
+    try {
+      const res = await fetch('/api/market-data/refresh-all?force=true')
+      const data = await res.json()
+      if (res.ok && !data.skipped) {
+        fetchSummary()
+        alert(`Cotações atualizadas: ${data.updated} ativo(s). ${data.failed > 0 ? `Falhas: ${data.failed}.` : ''}`)
+      } else if (data.skipped) {
+        alert('Última atualização há menos de 24h. Use o botão para forçar.')
+      } else {
+        alert(data.error || 'Erro ao atualizar cotações')
+      }
+    } catch {
+      alert('Erro ao atualizar cotações')
+    } finally {
+      setRefreshingQuotes(false)
+    }
+  }
 
   const fetchSummary = async () => {
     try {
@@ -86,10 +113,19 @@ export default function Home() {
             Dashboard
           </h2>
         </div>
-        <div className="mt-4 flex md:ml-4 md:mt-0">
+        <div className="mt-4 flex flex-wrap gap-2 md:ml-4 md:mt-0">
           <button
+            type="button"
+            onClick={handleRefreshQuotes}
+            disabled={refreshingQuotes}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+          >
+            {refreshingQuotes ? 'Atualizando...' : 'Atualizar cotações'}
+          </button>
+          <button
+            type="button"
             onClick={() => setShowImport(!showImport)}
-            className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
           >
             Importar Operações
           </button>
@@ -184,6 +220,11 @@ export default function Home() {
       {/* Gráfico de Performance vs Benchmarks */}
       <div className="mt-8">
         <PerformanceBenchmarkChart period={selectedPeriod} />
+      </div>
+
+      {/* Dividend Yield comparativo */}
+      <div className="mt-8">
+        <DividendYieldDashboard period={selectedPeriod} />
       </div>
 
       <div className="mt-8">

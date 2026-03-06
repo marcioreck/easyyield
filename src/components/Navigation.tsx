@@ -28,6 +28,9 @@ export function Navigation() {
             <Link href="/prices" className="hover:underline">
               Preços
             </Link>
+            <Link href="/assistant" className="hover:underline">
+              Assistente
+            </Link>
             <Link href="/settings" className="hover:underline">
               Configurações
             </Link>
@@ -94,6 +97,13 @@ export function Navigation() {
               onClick={() => setIsMenuOpen(false)}
             >
               Preços
+            </Link>
+            <Link
+              href="/assistant"
+              className="block py-2 px-4 hover:bg-blue-700 rounded"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Assistente
             </Link>
             <Link
               href="/settings"

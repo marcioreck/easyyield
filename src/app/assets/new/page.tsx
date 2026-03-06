@@ -22,9 +22,8 @@ export default function NewAssetPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrors([])
-    
-    // Validar dados
-    const validationErrors = validateAsset(formData)
+
+    const validationErrors = await validateAsset(formData)
     if (validationErrors.length > 0) {
       setErrors(validationErrors)
       return
