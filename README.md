@@ -207,6 +207,10 @@ easyyield/
 - Dados fundamentalistas básicos
 - Sem necessidade de API key
 
+### Cache e debug de respostas das APIs
+- **Cache:** As respostas das APIs (BRAPI, Yahoo) são guardadas em `.data/api-cache.json` com TTL (cotações 15 min, histórico 24h, busca 1h) para evitar chamadas repetidas e respeitar rate limits de planos gratuitos.
+- **Debug:** Com `DEBUG_API_RESPONSES=true` no `.env`, cada chamada (ou uso de cache) é registrada em `.data/api-debug.log` (uma linha JSON por evento), para inspecionar respostas e hits de cache.
+
 ## Cálculos Específicos
 
 ### Tesouro IPCA+

@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSession, signOut } from 'next-auth/react'
 
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { data: session, status } = useSession()
 
   return (
     <nav className="bg-blue-600 p-4 text-white shadow-md">
@@ -15,7 +17,7 @@ export function Navigation() {
           </Link>
           
           {/* Menu para desktop */}
-          <div className="hidden md:flex space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             <Link href="/" className="hover:underline">
               Dashboard
             </Link>
@@ -34,6 +36,26 @@ export function Navigation() {
             <Link href="/settings" className="hover:underline">
               Configurações
             </Link>
+            {status === 'loading' ? (
+              <span className="text-sm opacity-80">...</span>
+            ) : session?.user ? (
+              <>
+                <span className="text-sm truncate max-w-[120px]" title={session.user.email ?? undefined}>
+                  {session.user.email ?? session.user.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className="hover:underline text-sm"
+                >
+                  Sair
+                </button>
+              </>
+            ) : (
+              <Link href="/auth/signin" className="hover:underline">
+                Entrar
+              </Link>
+            )}
           </div>
 
           {/* Botão do menu mobile */}
@@ -112,6 +134,26 @@ export function Navigation() {
             >
               Configurações
             </Link>
+            {session?.user ? (
+              <button
+                type="button"
+                className="block w-full text-left py-2 px-4 hover:bg-blue-700 rounded"
+                onClick={() => {
+                  setIsMenuOpen(false)
+                  signOut({ callbackUrl: '/' })
+                }}
+              >
+                Sair
+              </button>
+            ) : (
+              <Link
+                href="/auth/signin"
+                className="block py-2 px-4 hover:bg-blue-700 rounded"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Entrar
+              </Link>
+            )}
           </div>
         )}
       </div>
