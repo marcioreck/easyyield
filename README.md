@@ -2,7 +2,7 @@
 
 Aplicação web para gerenciamento de investimentos no Brasil e nos EUA, permitindo o acompanhamento de diversos tipos de ativos através de importação de cotações de APIs gratuitas e cálculos de Dividend Yield (DY).
 
-**Uso local e pessoal.** O projeto é aberto no GitHub para críticas, sugestões e contribuições (veja [Contribuição](#contribuição) e [Patrocínio](#patrocínio)).
+**Uso local e pessoal.** O projeto é aberto no GitHub para críticas, sugestões e contribuições.
 
 ## Funcionalidades
 
